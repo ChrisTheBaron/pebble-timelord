@@ -2,6 +2,7 @@
 #include "splash.h"
 
 static Window *s_window;
+
 static BitmapLayer *s_layer_bitmap;
 static GBitmap *s_bitmap_refresh;
 
