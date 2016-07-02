@@ -1,0 +1,54 @@
+{
+  "name": "pebble-timelord",
+  "author": "University Radio York <computing@ury.org.uk> (https://github.com/UniversityRadioYork)",
+  "contributors": [
+    "Chris Taylor <christhebaron@gmail.com>"
+  ],
+  "version": "0.0.0",
+  "keywords": [
+    "pebble-app",
+    "ury"
+  ],
+  "private": true,
+  "dependencies": {},
+  "license": "MIT",
+  "pebble": {
+    "displayName": "URY Timelord",
+    "uuid": "30991d52-f10e-4dbb-9150-e8cd869deceb",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt"
+    ],
+    "watchapp": {
+      "watchface": false,
+      "hiddenApp": false,
+      "onlyShownOnCommunication": false
+    },
+    "messageKeys": [
+      "CURRENT_STUDIO",
+      "CURRENT_SHOW_NAME",
+      "CURRENT_SHOW_END"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_OPEN_SANS_BOLD_30",
+          "file": "fonts/Open_Sans/OpenSans-Bold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_OPEN_SANS_SEMI_BOLD_22",
+          "file": "fonts/Open_Sans/OpenSans-Semibold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_OPEN_SANS_SEMI_BOLD_20",
+          "file": "fonts/Open_Sans/OpenSans-Semibold.ttf"
+        }
+      ]
+    }
+  }
+}
