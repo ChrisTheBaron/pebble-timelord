@@ -1,6 +1,7 @@
 # pebble-timelord
 > A simple Pebble app to show the same information as the studio clock in URY.
 > Currently does not support Pebble Time Round.
+
 ## How to install
 - Install the [Pebble SDK](https://developer.pebble.com/sdk/)
 ```bash
