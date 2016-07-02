@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "pebble-timelord.h"
+#include "windows/splash.h"
 
 static Window *s_main_window;
 
@@ -18,7 +19,6 @@ int main(void) {
 }
 
 static void init() {
-
     // Load the custom fonts
     s_font_bold_30 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_BOLD_30));
     s_font_semi_bold_22 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_22));
@@ -33,8 +33,11 @@ static void init() {
             .unload = main_window_unload
     });
 
-    // Show the Window on the watch, with animated=true
+    // Now we can push the main screen onto the stack
     window_stack_push(s_main_window, true);
+
+    splash_window_init();
+    splash_window_show();
 
     // Register with TickTimerService
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
@@ -49,11 +52,11 @@ static void init() {
     const int inbox_size = 128;
     const int outbox_size = 128;
     app_message_open(inbox_size, outbox_size);
-
 }
 
 static void deinit() {
-    // Destroy Window
+    // Destroy Windows
+    splash_window_deinit();
     window_destroy(s_main_window);
     // Unload GFont
     fonts_unload_custom_font(s_font_bold_30);
@@ -132,6 +135,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
         text_layer_set_text(s_show_time_layer, end_buffer);
     }
+
+    // and remove the splash screen
+    splash_window_hide();
 
 }
 
