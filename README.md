@@ -11,7 +11,7 @@ $ pebble install --phone PHONE_IP_ADDRESS # to install to your phone
 ## TODO
 - [x] Display Studio Information & Current Show
 - [x] Add loading screen with URY logo
-- [ ] Vertical align show name
+- [x] Vertical align show name
 - [ ] Display show description
 - [ ] Update information periodically
 - [ ] Use Local Storage on phone to cache information
