@@ -66,7 +66,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 //    }
 
 }
-//separate
+
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 
     // Update the main window
