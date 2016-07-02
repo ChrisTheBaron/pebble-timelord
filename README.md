@@ -18,5 +18,6 @@ $ pebble install --phone PHONE_IP_ADDRESS # to install to your phone
 - [ ] Allow customisation
 - [ ] Push notifications for radio silence
 - [ ] Have notifications for shows starting soon
+
 ## License
 Copyright © 2016 University Radio York. Released under the MIT license.
