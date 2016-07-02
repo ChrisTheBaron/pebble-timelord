@@ -23,4 +23,6 @@ static void create_show_time_layer(Layer *window_layer, GRect bounds);
 
 static void create_show_name_layer(Layer *window_layer, GRect bounds);
 
+static void vertical_align_show_name(void);
+
 #endif //PEBBLE_TIMELORD_MAIN_H

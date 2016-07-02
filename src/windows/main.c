@@ -1,5 +1,9 @@
 #include <pebble.h>
+#include <math.h>
 #include "main.h"
+
+static const int show_time_height = 26;
+static const int studio_name_height = 40;
 
 static Window *s_window;
 
@@ -19,6 +23,7 @@ void main_window_init(void) {
             .load = main_window_load,
             .unload = main_window_unload
     });
+
 }
 
 void main_window_deinit(void) {
@@ -58,6 +63,7 @@ void main_window_update(DictionaryIterator *iterator, void *context) {
     if (name_tuple) {
         snprintf(name_buffer, sizeof(name_buffer), "%s", name_tuple->value->cstring);
         text_layer_set_text(s_show_name_layer, name_buffer);
+        vertical_align_show_name();
     }
 
     if (end_tuple) {
@@ -96,7 +102,7 @@ static void main_window_unload(Window *window) {
 
 static void create_studio_layer(Layer *window_layer, GRect bounds) {
     // Create the TextLayer with specific bounds
-    s_studio_layer = text_layer_create(GRect(0, 0, bounds.size.w, 50));
+    s_studio_layer = text_layer_create(GRect(0, 0, bounds.size.w, studio_name_height));
 
     // Style the text
     text_layer_set_background_color(s_studio_layer, GColorClear);
@@ -110,15 +116,20 @@ static void create_studio_layer(Layer *window_layer, GRect bounds) {
 
 static void create_show_name_layer(Layer *window_layer, GRect bounds) {
     // Create temperature Layer
-    s_show_name_layer = text_layer_create(GRect(0, 40, bounds.size.w, 75));
+    s_show_name_layer = text_layer_create(
+            GRect(
+                    0,
+                    studio_name_height,
+                    bounds.size.w,
+                    bounds.size.h - studio_name_height - show_time_height
+            ));
 
     // Style the text
     text_layer_set_background_color(s_show_name_layer, GColorClear);
     text_layer_set_text_color(s_show_name_layer, GColorBlack);
     text_layer_set_text_alignment(s_show_name_layer, GTextAlignmentCenter);
-    text_layer_set_font(s_show_name_layer, s_font_semi_bold_22);
+    text_layer_set_font(s_show_name_layer, s_font_semi_bold_20);
     text_layer_set_overflow_mode(s_show_name_layer, GTextOverflowModeWordWrap);
-    text_layer_set_text(s_show_name_layer, "Loading...");
 
     // Add it as a child layer to the Window's root layer
     layer_add_child(window_layer, text_layer_get_layer(s_show_name_layer));
@@ -126,7 +137,13 @@ static void create_show_name_layer(Layer *window_layer, GRect bounds) {
 
 static void create_show_time_layer(Layer *window_layer, GRect bounds) {
     // Create temperature Layer
-    s_show_time_layer = text_layer_create(GRect(0, bounds.size.h - 26, bounds.size.w, 26));
+    s_show_time_layer = text_layer_create(
+            GRect(
+                    0,
+                    bounds.size.h - show_time_height,
+                    bounds.size.w,
+                    show_time_height
+            ));
 
     // Style the text
     text_layer_set_background_color(s_show_time_layer, GColorClear);
@@ -136,4 +153,31 @@ static void create_show_time_layer(Layer *window_layer, GRect bounds) {
 
     // Add it as a child layer to the Window's root layer
     layer_add_child(window_layer, text_layer_get_layer(s_show_time_layer));
+}
+
+/**
+ * "Vertically Aligns" the show name as much as it can.
+ *
+ * Assumes that we can show a maximum height of
+ * (bounds.size.h - studio_name_height - show_time_height).
+ */
+static void vertical_align_show_name(void) {
+    // Get information about the Window
+    Layer *window_layer = window_get_root_layer(s_window);
+    GRect bounds = layer_get_bounds(window_layer);
+    // Calculate the amount of space we can take up
+    int max_show_name_height = bounds.size.h - studio_name_height - show_time_height;
+    GSize actual_size = text_layer_get_content_size(s_show_name_layer);
+    // Make sure we don't go over the max amount
+    int wanted_height = (int) fmin(actual_size.h, max_show_name_height);
+    // Calculate the top position of the layer in the middle of the window
+    int layer_position = (bounds.size.h / 2 - wanted_height / 2);
+    // We can afford to make the layer as big as we can to stop characters being cut off
+    int layer_height = bounds.size.h - layer_position - show_time_height;
+    layer_set_frame(text_layer_get_layer(s_show_name_layer), GRect(
+            0,
+            layer_position,
+            bounds.size.w,
+            layer_height
+    ));
 }
