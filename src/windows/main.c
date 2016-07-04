@@ -16,8 +16,7 @@ static TextLayer *s_studio_layer;
 static TextLayer *s_show_time_layer;
 static TextLayer *s_show_name_layer;
 
-static char *s_show_name;
-static char *s_show_description;
+static struct description_window_content s_desc_content;
 
 void main_window_init(void) {
     // Create main Window element and assign to pointer
@@ -35,8 +34,9 @@ void main_window_deinit(void) {
     window_destroy(s_window);
 }
 
-void main_window_show(void) {
+void main_window_show(struct main_window_content content) {
     window_stack_push(s_window, false);
+    main_window_update(content);
 }
 
 void main_window_hide(void) {
@@ -47,52 +47,29 @@ bool main_window_is_visible(void) {
     return window_stack_get_top_window() == s_window;
 }
 
-void main_window_update(DictionaryIterator *iterator, void *context) {
+void main_window_update(struct main_window_content content) {
+    // Store the description content for later use
+    s_desc_content = content.description_window_content;
 
-    // Store incoming information
-    static char studio_buffer[10];
+    text_layer_set_text(s_studio_layer, content.studio_name);
+
+    text_layer_set_text(s_show_name_layer, content.show_name);
+    vertical_align_show_name();
+
     static char end_buffer[15];
 
-    // Read tuples for data
-    Tuple *studio_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_STUDIO);
-    Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_NAME);
-    Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_END);
-    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_DESC);
-
-    // Check that we've received the data we need
-    if (studio_tuple) {
-        strcpy(studio_buffer, studio_tuple->value->cstring);
-        text_layer_set_text(s_studio_layer, studio_buffer);
+    // If end_value is 0 then we don't have an end time. I.E. Jukebox "The End of Time"
+    if (content.show_end) {
+        time_t end_time = (time_t) content.show_end;
+        time_t temp = time(&end_time);
+        struct tm *tick_time = localtime(&temp);
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
+        strftime(end_buffer, sizeof(end_buffer), "Now - %I:%M", tick_time);
+    } else {
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
+        snprintf(end_buffer, sizeof(end_buffer), "Now - Forever");
     }
-
-    if (name_tuple) {
-        s_show_name = malloc(sizeof(char) * 250);
-        strcpy(s_show_name, name_tuple->value->cstring);
-        text_layer_set_text(s_show_name_layer, s_show_name);
-        vertical_align_show_name();
-    }
-
-    if (desc_tuple) {
-        s_show_description = malloc(sizeof(char) * 1000);
-        strcpy(s_show_description, desc_tuple->value->cstring);
-    }
-
-    if (end_tuple) {
-        uint32_t end_value = (uint32_t) end_tuple->value->uint32;
-        // If end_value is 0 then we don't have an end time. I.E. Jukebox "The End of Time"
-        if (end_value) {
-            time_t end_time = (time_t) end_value;
-            time_t temp = time(&end_time);
-            struct tm *tick_time = localtime(&temp);
-            text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
-            strftime(end_buffer, sizeof(end_buffer), "Now - %I:%M", tick_time);
-        } else {
-            text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
-            snprintf(end_buffer, sizeof(end_buffer), "Now - Forever");
-        }
-        text_layer_set_text(s_show_time_layer, end_buffer);
-    }
-
+    text_layer_set_text(s_show_time_layer, end_buffer);
 }
 
 static void main_window_load(Window *window) {
@@ -194,10 +171,7 @@ static void vertical_align_show_name(void) {
 }
 
 static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-    description_window_show((struct description_window_content) {
-            .show_name = s_show_name,
-            .show_description = s_show_description
-    });
+    description_window_show(s_desc_content);
 }
 
 static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context) {

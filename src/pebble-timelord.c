@@ -73,11 +73,46 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-    // Update the main window
-    main_window_show();
-    main_window_update(iterator, context);
-    // and remove the splash screen
+
+    // Store incoming information
+    struct main_window_content content = (struct main_window_content) {
+            .studio_name = malloc(sizeof(char) * 10),
+            .show_name = malloc(sizeof(char) * 100),
+            .description_window_content = (struct description_window_content) {
+                    .show_name = malloc(sizeof(char) * 100),
+                    .show_description = malloc(sizeof(char) * 500)
+            }
+    };
+
+    // Read tuples for data
+    Tuple *studio_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_STUDIO);
+    Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_NAME);
+    Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_END);
+    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_DESC);
+
+    // Check that we've received the data we need
+    if (studio_tuple) {
+        strcpy(content.studio_name, studio_tuple->value->cstring);
+    }
+
+    if (name_tuple) {
+        strcpy(content.show_name, name_tuple->value->cstring);
+        strcpy(content.description_window_content.show_name, name_tuple->value->cstring);
+    }
+
+    if (desc_tuple) {
+        strcpy(content.description_window_content.show_description, desc_tuple->value->cstring);
+    }
+
+    if (end_tuple) {
+        content.show_end = (uint32_t) end_tuple->value->uint32;
+    }
+
+    // Show the main window
+    main_window_show(content);
+
     splash_window_hide();
+
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {

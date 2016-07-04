@@ -1,17 +1,26 @@
 #ifndef PEBBLE_TIMELORD_MAIN_H
 #define PEBBLE_TIMELORD_MAIN_H
 
+#include "description.h"
+
+struct main_window_content {
+    char *studio_name;
+    char *show_name;
+    uint32_t show_end;
+    struct description_window_content description_window_content;
+};
+
 void main_window_init(void);
 
 void main_window_deinit(void);
 
-void main_window_show(void);
+void main_window_show(struct main_window_content content);
 
 void main_window_hide(void);
 
 bool main_window_is_visible(void);
 
-void main_window_update(DictionaryIterator *iterator, void *context);
+void main_window_update(struct main_window_content content);
 
 static void main_window_load(Window *window);
 
