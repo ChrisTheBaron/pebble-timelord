@@ -10,7 +10,9 @@
     "ury"
   ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "string": "^3.3.1"
+  },
   "license": "MIT",
   "pebble": {
     "displayName": "URY Timelord",
@@ -29,7 +31,8 @@
     "messageKeys": [
       "CURRENT_STUDIO",
       "CURRENT_SHOW_NAME",
-      "CURRENT_SHOW_END"
+      "CURRENT_SHOW_END",
+      "CURRENT_SHOW_DESC"
     ],
     "resources": {
       "media": [

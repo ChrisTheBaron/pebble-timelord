@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include <math.h>
 #include "main.h"
+#include "description.h"
 
 static const int show_time_height = 26;
 static const int studio_name_height = 40;
@@ -15,6 +16,9 @@ static TextLayer *s_studio_layer;
 static TextLayer *s_show_time_layer;
 static TextLayer *s_show_name_layer;
 
+static char *s_show_name;
+static char *s_show_description;
+
 void main_window_init(void) {
     // Create main Window element and assign to pointer
     s_window = window_create();
@@ -23,7 +27,8 @@ void main_window_init(void) {
             .load = main_window_load,
             .unload = main_window_unload
     });
-
+    // Set the window click listeners
+    window_set_click_config_provider(s_window, main_window_click_config_provider);
 }
 
 void main_window_deinit(void) {
@@ -46,24 +51,30 @@ void main_window_update(DictionaryIterator *iterator, void *context) {
 
     // Store incoming information
     static char studio_buffer[10];
-    static char name_buffer[100];
     static char end_buffer[15];
 
     // Read tuples for data
     Tuple *studio_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_STUDIO);
     Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_NAME);
     Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_END);
+    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_DESC);
 
     // Check that we've received the data we need
     if (studio_tuple) {
-        snprintf(studio_buffer, sizeof(studio_buffer), "%s", studio_tuple->value->cstring);
+        strcpy(studio_buffer, studio_tuple->value->cstring);
         text_layer_set_text(s_studio_layer, studio_buffer);
     }
 
     if (name_tuple) {
-        snprintf(name_buffer, sizeof(name_buffer), "%s", name_tuple->value->cstring);
-        text_layer_set_text(s_show_name_layer, name_buffer);
+        s_show_name = malloc(sizeof(char) * 250);
+        strcpy(s_show_name, name_tuple->value->cstring);
+        text_layer_set_text(s_show_name_layer, s_show_name);
         vertical_align_show_name();
+    }
+
+    if (desc_tuple) {
+        s_show_description = malloc(sizeof(char) * 1000);
+        strcpy(s_show_description, desc_tuple->value->cstring);
     }
 
     if (end_tuple) {
@@ -180,4 +191,23 @@ static void vertical_align_show_name(void) {
             bounds.size.w,
             layer_height
     ));
+}
+
+static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+    description_window_show((struct description_window_content) {
+            .show_name = s_show_name,
+            .show_description = s_show_description
+    });
+}
+
+static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
+
+static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+}
+
+static void main_window_click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_SELECT, main_window_select_click_handler);
+    window_single_click_subscribe(BUTTON_ID_UP, main_window_up_click_handler);
+    window_single_click_subscribe(BUTTON_ID_DOWN, main_window_down_click_handler);
 }

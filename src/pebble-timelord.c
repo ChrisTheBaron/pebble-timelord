@@ -2,6 +2,7 @@
 #include "pebble-timelord.h"
 #include "windows/splash.h"
 #include "windows/main.h"
+#include "windows/description.h"
 
 GFont s_font_bold_30;
 GFont s_font_semi_bold_22;
@@ -19,11 +20,14 @@ static void init() {
     s_font_semi_bold_22 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_22));
     s_font_semi_bold_20 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_20));
 
+    // These are the windows we need straight away
     main_window_init();
-    main_window_show();
-
     splash_window_init();
+
     splash_window_show();
+
+    // These ones can wait
+    description_window_init();
 
     // Register with TickTimerService
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
@@ -35,13 +39,14 @@ static void init() {
     app_message_register_outbox_sent(outbox_sent_callback);
 
     // Open AppMessage
-    const int inbox_size = 128;
+    const int inbox_size = 2048;
     const int outbox_size = 128;
     app_message_open(inbox_size, outbox_size);
 }
 
 static void deinit() {
     // Destroy Windows
+    description_window_deinit();
     splash_window_deinit();
     main_window_deinit();
     // Unload GFont
@@ -68,13 +73,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-
     // Update the main window
+    main_window_show();
     main_window_update(iterator, context);
-
     // and remove the splash screen
     splash_window_hide();
-
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {

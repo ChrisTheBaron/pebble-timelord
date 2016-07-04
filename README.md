@@ -12,9 +12,10 @@ $ pebble install --phone PHONE_IP_ADDRESS # to install to your phone
 - [x] Display Studio Information & Current Show
 - [x] Add loading screen with URY logo
 - [x] Vertical align show name
-- [ ] Display show description
+- [x] Display show description
 - [ ] Update information periodically
-- [ ] Use Local Storage on phone to cache information
+- [x] Use Local Storage on phone to cache information
+- [ ] Display upcoming shows
 - [ ] Allow customisation
 - [ ] Push notifications for radio silence
 - [ ] Have notifications for shows starting soon

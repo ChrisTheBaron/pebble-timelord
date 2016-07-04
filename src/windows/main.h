@@ -25,4 +25,12 @@ static void create_show_name_layer(Layer *window_layer, GRect bounds);
 
 static void vertical_align_show_name(void);
 
+static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context);
+
+static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context);
+
+static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *context);
+
+static void main_window_click_config_provider(void *context);
+
 #endif //PEBBLE_TIMELORD_MAIN_H
