@@ -58,7 +58,7 @@ var ls = module.exports = {
      * @param validFor seconds
      */
     set: function (key, value, validFor) {
-        console.log("Storing value under '" + key + "' for " + validFor + "secs");
+        console.log("Storing value under '" + key + "' for " + validFor + " secs");
         var expires = Date.now() + (validFor * 1000);
         console.log("Value valid till: " + expires);
         localStorage.setItem(key, JSON.stringify(value));

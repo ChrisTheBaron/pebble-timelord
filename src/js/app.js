@@ -13,11 +13,38 @@ Pebble.addEventListener('ready',
 Pebble.addEventListener('appmessage',
     function (e) {
         console.log('AppMessage received!');
-        getInitialData();
+        getUpdateData();
     }
 );
 
 function getInitialData() {
+
+    Q.all([ury.getStudio(), ury.getShow()])
+        .spread(function (studio, show) {
+            // Assemble dictionary using our keys
+            var dictionary = {
+                "CURRENT_STUDIO": studio,
+                "CURRENT_SHOW_NAME": show.name,
+                "CURRENT_SHOW_END": show.end,
+                "CURRENT_SHOW_DESC": show.desc
+            };
+            // Send to Pebble
+            Pebble.sendAppMessage(dictionary,
+                function (e) {
+                    console.log('Info sent to Pebble successfully!');
+                },
+                function (e) {
+                    console.log('Error sending info to Pebble!');
+                }
+            );
+        })
+        .catch(function (err) {
+            console.log("Failed to call URY API", err);
+        });
+
+}
+
+function getUpdateData() {
 
     Q.all([ury.getStudio(), ury.getShow()])
         .spread(function (studio, show) {

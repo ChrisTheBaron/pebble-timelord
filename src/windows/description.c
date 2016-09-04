@@ -54,7 +54,8 @@ void description_window_update(struct description_window_content content) {
             bounds.size.w,
             max_size_desc.h
     ));
-    scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, max_size_name.h + max_size_desc.h + 5));
+    scroll_layer_set_content_size(s_scroll_layer,
+                                  GSize(bounds.size.w, max_size_name.h + max_size_desc.h + 5));
 }
 
 static void description_window_load(Window *window) {

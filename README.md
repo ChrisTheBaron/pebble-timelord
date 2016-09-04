@@ -13,7 +13,7 @@ $ pebble install --phone PHONE_IP_ADDRESS # to install to your phone
 - [x] Add loading screen with URY logo
 - [x] Vertical align show name
 - [x] Display show description
-- [ ] Update information periodically
+- [x] Update information periodically
 - [x] Use Local Storage on phone to cache information
 - [ ] Display upcoming shows
 - [ ] Allow customisation

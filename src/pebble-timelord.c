@@ -16,9 +16,12 @@ int main(void) {
 
 static void init() {
     // Load the custom fonts
-    s_font_bold_30 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_BOLD_30));
-    s_font_semi_bold_22 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_22));
-    s_font_semi_bold_20 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_20));
+    s_font_bold_30 = fonts_load_custom_font(
+            resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_BOLD_30));
+    s_font_semi_bold_22 = fonts_load_custom_font(
+            resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_22));
+    s_font_semi_bold_20 = fonts_load_custom_font(
+            resource_get_handle(RESOURCE_ID_FONT_OPEN_SANS_SEMI_BOLD_20));
 
     // These are the windows we need straight away
     main_window_init();
@@ -57,18 +60,13 @@ static void deinit() {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
-//    // Get weather update every 30 minutes
-//    if (tick_time->tm_min % 5 == 0) {
-//        // Begin dictionary
-//        DictionaryIterator *iter;
-//        app_message_outbox_begin(&iter);
-//
-//        // Add a key-value pair
-//        dict_write_uint8(iter, 0, 0);
-//
-//        // Send the message!
-//        app_message_outbox_send();
-//    }
+//    APP_LOG(APP_LOG_LEVEL_ERROR, "Update triggered!");
+
+//  Begin dictionary
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+//  Send the message!
+    app_message_outbox_send();
 
 }
 
@@ -97,21 +95,28 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
     if (name_tuple) {
         strcpy(content.show_name, name_tuple->value->cstring);
-        strcpy(content.description_window_content.show_name, name_tuple->value->cstring);
+        strcpy(content.description_window_content.show_name,
+               name_tuple->value->cstring);
     }
 
     if (desc_tuple) {
-        strcpy(content.description_window_content.show_description, desc_tuple->value->cstring);
+        strcpy(content.description_window_content.show_description,
+               desc_tuple->value->cstring);
     }
 
     if (end_tuple) {
         content.show_end = (uint32_t) end_tuple->value->uint32;
     }
 
-    // Show the main window
-    main_window_show(content);
-
-    splash_window_hide();
+    if (!main_window_is_visible()) {
+        // Show the main window
+        main_window_show(content);
+        splash_window_hide();
+        APP_LOG(APP_LOG_LEVEL_INFO, "Showing main window");
+    } else {
+        main_window_update(content);
+        APP_LOG(APP_LOG_LEVEL_INFO, "Don't need to show main window");
+    }
 
 }
 
@@ -119,7 +124,9 @@ static void inbox_dropped_callback(AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
 }
 
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+static void
+outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason,
+                       void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
 }
 
