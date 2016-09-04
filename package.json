@@ -53,9 +53,15 @@
           "file": "fonts/Open_Sans/OpenSans-Semibold.ttf"
         },
         {
-          "type": "bitmap",
+          "type": "png",
           "name": "IMAGE_LOGO_125",
           "file": "images/logo-125.png"
+        },
+        {
+          "type": "png",
+          "menuIcon": true,
+          "name": "IMAGE_LOGO_28",
+          "file": "images/logo-28.png"
         }
       ]
     }
