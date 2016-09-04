@@ -1,3 +1,4 @@
+var Q = require('q');
 var ls = require('./../utils/ls');
 var misc = require('./../utils/misc');
 
@@ -9,22 +10,26 @@ const api_url = 'https://ury.org.uk/api/v2/';
  * @param endpoint to call relative to root. Don't include leading slash
  * @param options to pass in as GET parameters
  * @param cache {Number|boolean} either number of seconds to cache the request for, or false to not cache it
- * @param success {function}
- * @param error {function}
+ * @return Promise
  */
-var apiRequest = function (endpoint, options, cache, success, error) {
-    var xhrRequest = function (url, type, success, error) {
+var apiRequest = function (endpoint, options, cache) {
+
+    var deferred = Q.defer();
+
+    var xhrRequest = function (url, type) {
+
+        var deferred = Q.defer();
+
         var xhr = new XMLHttpRequest();
         xhr.onload = function () {
-            success(this.responseText);
+            deferred.resolve(this.responseText);
         };
-        xhr.onerror = function () {
-            if (typeof error == "function") {
-                error();
-            }
-        };
+        xhr.onerror = deferred.reject;
         xhr.open(type, url);
         xhr.send();
+
+        return deferred.promise;
+
     };
 
     var serialize = function (obj) {
@@ -39,37 +44,38 @@ var apiRequest = function (endpoint, options, cache, success, error) {
 
     if (cache !== false && ls.isValid(endpoint)) {
         var value = ls.get(endpoint);
-        if (value !== null) {
-            success(value);
-            return;
-        }
+        deferred.resolve(value);
+    } else { // No data in cache
+        options = options || {};
+        options["api_key"] = options["api_key"] || api_key;
+        options = serialize(options);
+
+        xhrRequest(api_url + endpoint + "?" + options, "GET")
+            .then(function (response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (cache !== false) {
+                        ls.set(endpoint, data["payload"], cache);
+                    }
+                    deferred.resolve(data["payload"]);
+                } catch (error) {
+                    deferred.reject(error);
+                }
+            })
+            .catch(deferred.reject)
+            .done();
     }
 
-    // If we get here then we have no cached data
-    options = options || {};
-    options["api_key"] = options["api_key"] || api_key;
-    options = serialize(options);
-
-    xhrRequest(api_url + endpoint + "?" + options, "GET",
-        function (response) {
-            try {
-                var data = JSON.parse(response);
-                if (cache !== false) {
-                    ls.set(endpoint, data["payload"], cache);
-                }
-                success(data["payload"]);
-            } catch (error) {
-                error();
-            }
-        },
-        error
-    );
+    return deferred.promise;
 
 };
 
 var ury = module.exports = {
 
-    getStudio: function (success, error) {
+    /**
+     * @return Promise
+     */
+    getStudio: function () {
         function parseStudio(payload) {
             var studio;
             switch (payload["studio"]) {
@@ -90,18 +96,17 @@ var ury = module.exports = {
             return studio;
         }
 
-        apiRequest(
+        return apiRequest(
             'selector/statusattime',
             {},
-            30,
-            function (payload) {
-                success(parseStudio(payload));
-            },
-            error
-        );
+            30
+        ).then(parseStudio);
     },
 
-    getShow: function (success, error) {
+    /**
+     * @return Promise
+     */
+    getShow: function () {
         function parseShow(payload) {
             var name = payload["current"]["title"];
             var end = payload["current"]["end_time"];
@@ -120,29 +125,26 @@ var ury = module.exports = {
             };
         }
 
-        apiRequest(
+        return apiRequest(
             'timeslot/currentandnext',
             {
                 n: 10,
                 filter: [1, 2]
             },
-            30,
-            function (payload) {
-                success(parseShow(payload));
-            },
-            error
-        );
+            30
+        ).then(parseShow);
     },
 
-    getSeasons: function (success, error) {
-        apiRequest(
+    /**
+     * @return Promise
+     */
+    getSeasons: function () {
+        return apiRequest(
             'season/allseasonsinlatestterm',
             null,
             // It is unlikely that the schedule will change often,
             // so we can cache this for a while
-            60 * 60 * 24,
-            success,
-            error
+            60 * 60 * 24
         );
     }
 

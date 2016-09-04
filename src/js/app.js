@@ -1,3 +1,4 @@
+var Q = require('q');
 var ury = require('./services/ury');
 
 // Listen for when the watchface is opened
@@ -17,34 +18,28 @@ Pebble.addEventListener('appmessage',
 );
 
 function getInitialData() {
-    ury.getStudio(
-        function (studio) {
-            ury.getShow(
-                function (show) {
-                    // Assemble dictionary using our keys
-                    var dictionary = {
-                        "CURRENT_STUDIO": studio,
-                        "CURRENT_SHOW_NAME": show.name,
-                        "CURRENT_SHOW_END": show.end,
-                        "CURRENT_SHOW_DESC": show.desc
-                    };
-                    // Send to Pebble
-                    Pebble.sendAppMessage(dictionary,
-                        function (e) {
-                            console.log('Info sent to Pebble successfully!');
-                        },
-                        function (e) {
-                            console.log('Error sending info to Pebble!');
-                        }
-                    );
+
+    Q.all([ury.getStudio(), ury.getShow()])
+        .spread(function (studio, show) {
+            // Assemble dictionary using our keys
+            var dictionary = {
+                "CURRENT_STUDIO": studio,
+                "CURRENT_SHOW_NAME": show.name,
+                "CURRENT_SHOW_END": show.end,
+                "CURRENT_SHOW_DESC": show.desc
+            };
+            // Send to Pebble
+            Pebble.sendAppMessage(dictionary,
+                function (e) {
+                    console.log('Info sent to Pebble successfully!');
                 },
-                function () {
-                    console.log("Failed to call URY API");
+                function (e) {
+                    console.log('Error sending info to Pebble!');
                 }
             );
-        },
-        function () {
-            console.log("Failed to call URY API");
-        }
-    );
+        })
+        .catch(function (err) {
+            console.log("Failed to call URY API", err);
+        });
+
 }
