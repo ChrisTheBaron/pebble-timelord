@@ -21,6 +21,11 @@
  *  to MD5 the name or something similar.
  */
 
+/**
+ * @const LS_DISABLED set to true to disable Local Storage. Used for debugging
+ */
+const LS_DISABLED = false;
+
 var ls = module.exports = {
 
     /**
@@ -30,6 +35,10 @@ var ls = module.exports = {
      * @return null if key is not set, or data has expired
      */
     get: function (key) {
+        if (LS_DISABLED) {
+            console.log("Local Storage disabled");
+            return null;
+        }
         console.log("Looking for key '" + key + "'");
         var value = localStorage.getItem(key);
         if (value === null) {
@@ -58,6 +67,10 @@ var ls = module.exports = {
      * @param validFor seconds
      */
     set: function (key, value, validFor) {
+        if (LS_DISABLED) {
+            console.log("Local Storage disabled");
+            return;
+        }
         console.log("Storing value under '" + key + "' for " + validFor + " secs");
         var expires = Date.now() + (validFor * 1000);
         console.log("Value valid till: " + expires);
@@ -71,6 +84,10 @@ var ls = module.exports = {
      * @return boolean
      */
     isValid: function (key) {
+        if (LS_DISABLED) {
+            console.log("Local Storage disabled");
+            return false;
+        }
         console.log("Looking for expiry key '@" + key + "'");
         var expires = localStorage.getItem("@" + key);
         if (expires === null) {
