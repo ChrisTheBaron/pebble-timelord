@@ -56,20 +56,7 @@ void main_window_update(struct main_window_content content) {
     text_layer_set_text(s_show_name_layer, content.show_name);
     vertical_align_show_name();
 
-    static char end_buffer[15];
-
-    // If end_value is 0 then we don't have an end time. I.E. Jukebox "The End of Time"
-    if (content.show_end) {
-        time_t end_time = (time_t) content.show_end;
-        time_t temp = time(&end_time);
-        struct tm *tick_time = localtime(&temp);
-        text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
-        strftime(end_buffer, sizeof(end_buffer), "Now - %I:%M", tick_time);
-    } else {
-        text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
-        snprintf(end_buffer, sizeof(end_buffer), "Now - Forever");
-    }
-    text_layer_set_text(s_show_time_layer, end_buffer);
+    update_show_time(content.show_start, content.show_end);
 }
 
 static void main_window_load(Window *window) {
@@ -184,4 +171,41 @@ static void main_window_click_config_provider(void *context) {
     window_single_click_subscribe(BUTTON_ID_SELECT, main_window_select_click_handler);
     window_single_click_subscribe(BUTTON_ID_UP, main_window_up_click_handler);
     window_single_click_subscribe(BUTTON_ID_DOWN, main_window_down_click_handler);
+}
+
+static void update_show_time(uint32_t start, uint32_t end) {
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "Start: %d, End: %d", (int) start, (int) end);
+
+    static char buffer[15];
+
+    text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
+
+    // If start is 0 then we don't have a start time.
+    // This is probably the current show. We'll just
+    // assume we can say the show started 'Now'.
+    if (start) {
+        time_t start_time = (time_t) start;
+        struct tm *tick_time = localtime(&start_time);
+        strftime(buffer, sizeof(buffer), "%H:%M - ", tick_time);
+    } else {
+        snprintf(buffer, sizeof(buffer), "Now - ");
+    }
+
+    // If end is 0 then we don't have an end time.
+    // I.E. Jukebox "The End of Time" at term ends.
+    if (end) {
+        char end_buff[6];
+        time_t end_time = (time_t) end;
+        struct tm *tick_time = localtime(&end_time);
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
+        strftime(end_buff, sizeof(end_buff), "%H:%M", tick_time);
+        strcat(buffer, end_buff);
+    } else {
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
+        strcat(buffer, "Forever");
+    }
+
+    text_layer_set_text(s_show_time_layer, buffer);
+
 }

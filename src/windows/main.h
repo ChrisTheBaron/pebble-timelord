@@ -43,4 +43,6 @@ static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *
 
 static void main_window_click_config_provider(void *context);
 
+static void update_show_time(uint32_t start, uint32_t end);
+
 #endif //PEBBLE_TIMELORD_MAIN_H
