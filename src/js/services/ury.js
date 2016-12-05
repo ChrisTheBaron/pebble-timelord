@@ -1,9 +1,7 @@
 var Q = require('q');
 var ls = require('./../utils/ls');
 var misc = require('./../utils/misc');
-
-const API_KEY = "6714984033428651727560238623082704224251296711076362946824083834883347645233279353289151659128276857";
-const API_URL = 'https://ury.org.uk/api/v2/';
+const config = require("./../config");
 
 var ury = module.exports = {
 
@@ -21,15 +19,15 @@ var ury = module.exports = {
     /**
      * @return Promise
      */
-    getShow: function () {
+    getShows: function () {
         return apiRequest(
             'timeslot/currentandnext',
             {
-                n: 3,
+                n: config.NUM_SHOWS - 1,
                 filter: [1, 2]
             },
             30
-        ).then(parseShow);
+        ).then(parseShows);
     },
 
     /**
@@ -55,19 +53,16 @@ var ury = module.exports = {
  * @return Promise
  */
 function apiRequest(endpoint, options, cache) {
-
     var deferred = Q.defer();
-
     if (cache !== false && ls.isValid(endpoint)) {
         var value = ls.get(endpoint);
         deferred.resolve(value);
     } else { // No data in cache
         console.log("Nothing in cache, calling API");
         options = options || {};
-        options["api_key"] = options["api_key"] || API_KEY;
+        options["api_key"] = options["api_key"] || config.API_KEY;
         options = serialize(options);
-
-        xhrRequest(API_URL + endpoint + "?" + options, "GET")
+        xhrRequest(config.API_URL + endpoint + "?" + options, "GET")
             .then(function (response) {
                 try {
                     var data = JSON.parse(response);
@@ -82,15 +77,11 @@ function apiRequest(endpoint, options, cache) {
             .catch(deferred.reject)
             .done();
     }
-
     return deferred.promise;
-
 }
 
 function xhrRequest(url, type) {
-
     var deferred = Q.defer();
-
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
         deferred.resolve(this.responseText);
@@ -98,9 +89,7 @@ function xhrRequest(url, type) {
     xhr.onerror = deferred.reject;
     xhr.open(type, url);
     xhr.send();
-
     return deferred.promise;
-
 }
 
 function serialize(obj) {
@@ -133,17 +122,37 @@ function parseStudio(payload) {
     return studio;
 }
 
-function parseShow(payload) {
-    var name = payload["current"]["title"];
-    var end = payload["current"]["end_time"];
-    var desc = misc.htmlToText(payload["current"]["desc"]);
+function parseShows(payload) {
+    var shows = [];
+    shows.push(parseShow(payload["current"]));
+    if (payload["next"]) {
+        for (var i = 0; i < config.NUM_SHOWS && i < payload["next"].length; i++) {
+            shows.push(parseShow(payload["next"][i]));
+        }
+    } else {
+        console.warn("No 'next' shows in payload");
+    }
+    return shows;
+}
+
+function parseShow(show) {
+    var name = show["title"];
+    var start = show["start_time"];
+    if (start == null) {
+        start = 0;
+    } else {
+        start = parseInt(start);
+    }
+    var end = show["end_time"];
     if (end == "The End of Time") {
         end = 0;
     } else {
-        end = parseInt(end); // Just to make sure it's an integer
+        end = parseInt(end);
     }
+    var desc = misc.htmlToText(show["desc"]);
     return {
         name: name,
+        start: start,
         end: end,
         desc: desc
     };

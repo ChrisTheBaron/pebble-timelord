@@ -84,9 +84,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
     // Read tuples for data
     Tuple *studio_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_STUDIO);
-    Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_NAME);
-    Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_END);
-    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_SHOW_DESC);
+    Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_NAME);
+    Tuple *start_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_START);
+    Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_END);
+    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_DESC);
 
     // Check that we've received the data we need
     if (studio_tuple) {
@@ -102,6 +103,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     if (desc_tuple) {
         strcpy(content.description_window_content.show_description,
                desc_tuple->value->cstring);
+    }
+
+    if (start_tuple) {
+        content.show_start = (uint32_t) start_tuple->value->uint32;
     }
 
     if (end_tuple) {

@@ -1,5 +1,7 @@
 var Q = require('q');
 var ury = require('./services/ury');
+var keys = require('message_keys');
+var config = require("./config");
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready',
@@ -19,15 +21,10 @@ Pebble.addEventListener('appmessage',
 
 function getInitialData() {
 
-    Q.all([ury.getStudio(), ury.getShow()])
-        .spread(function (studio, show) {
+    Q.all([ury.getStudio(), ury.getShows()])
+        .spread(function (studio, shows) {
             // Assemble dictionary using our keys
-            var dictionary = {
-                "CURRENT_STUDIO": studio,
-                "CURRENT_SHOW_NAME": show.name,
-                "CURRENT_SHOW_END": show.end,
-                "CURRENT_SHOW_DESC": show.desc
-            };
+            var dictionary = assembleDictionary(studio, shows);
             // Send to Pebble
             Pebble.sendAppMessage(dictionary,
                 function (e) {
@@ -45,28 +42,19 @@ function getInitialData() {
 }
 
 function getUpdateData() {
+    getInitialData();
+}
 
-    Q.all([ury.getStudio(), ury.getShow()])
-        .spread(function (studio, show) {
-            // Assemble dictionary using our keys
-            var dictionary = {
-                "CURRENT_STUDIO": studio,
-                "CURRENT_SHOW_NAME": show.name,
-                "CURRENT_SHOW_END": show.end,
-                "CURRENT_SHOW_DESC": show.desc
-            };
-            // Send to Pebble
-            Pebble.sendAppMessage(dictionary,
-                function (e) {
-                    console.log('Info sent to Pebble successfully!');
-                },
-                function (e) {
-                    console.log('Error sending info to Pebble!');
-                }
-            );
-        })
-        .catch(function (err) {
-            console.log("Failed to call URY API", err);
-        });
-
+function assembleDictionary(studio, shows) {
+    var dictionary = {};
+    dictionary[keys["CURRENT_STUDIO"]] = studio;
+    // Do a check for the actual length just in case the api
+    // didn't return as many shows as we were expecting.
+    for (var i = 0; i < shows.length && i < config.NUM_SHOWS; i++) {
+        dictionary[keys["SHOW_NAME"] + i] = shows[i].name;
+        dictionary[keys["SHOW_START"] + i] = shows[i].start;
+        dictionary[keys["SHOW_END"] + i] = shows[i].end;
+        dictionary[keys["SHOW_DESC"] + i] = shows[i].desc;
+    }
+    return dictionary;
 }

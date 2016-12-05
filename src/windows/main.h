@@ -6,6 +6,7 @@
 struct main_window_content {
     char *studio_name;
     char *show_name;
+    uint32_t show_start;
     uint32_t show_end;
     struct description_window_content description_window_content;
 };
