@@ -19,7 +19,7 @@ static TextLayer *s_show_time_layer;
 static TextLayer *s_show_name_layer;
 
 static w_main_content s_window_content;
-static uint s_current_show_index;
+static int s_current_show_index;
 
 void main_window_init(void) {
     // Create main Window element and assign to pointer
@@ -164,9 +164,17 @@ static void main_window_select_click_handler(ClickRecognizerRef recognizer, void
 }
 
 static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (s_current_show_index > 0) {
+        s_current_show_index--;
+    }
+    render_show_info();
 }
 
 static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (s_current_show_index < (s_window_content.num_shows - 1)) {
+        s_current_show_index++;
+    }
+    render_show_info();
 }
 
 static void main_window_click_config_provider(void *context) {
