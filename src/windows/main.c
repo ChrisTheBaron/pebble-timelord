@@ -1,5 +1,7 @@
 #include <pebble.h>
 #include <math.h>
+
+#include "../types.h"
 #include "main.h"
 #include "description.h"
 
@@ -16,7 +18,8 @@ static TextLayer *s_studio_layer;
 static TextLayer *s_show_time_layer;
 static TextLayer *s_show_name_layer;
 
-static struct description_window_content s_desc_content;
+static w_main_content s_window_content;
+static uint s_current_show_index;
 
 void main_window_init(void) {
     // Create main Window element and assign to pointer
@@ -34,7 +37,7 @@ void main_window_deinit(void) {
     window_destroy(s_window);
 }
 
-void main_window_show(struct main_window_content content) {
+void main_window_show(w_main_content content) {
     window_stack_push(s_window, false);
     main_window_update(content);
 }
@@ -47,16 +50,15 @@ bool main_window_is_visible(void) {
     return window_stack_get_top_window() == s_window;
 }
 
-void main_window_update(struct main_window_content content) {
-    // Store the description content for later use
-    s_desc_content = content.description_window_content;
+void main_window_update(w_main_content content) {
+    // Store the content for later use
+    s_window_content = content;
+    s_current_show_index = 0;
 
     text_layer_set_text(s_studio_layer, content.studio_name);
 
-    text_layer_set_text(s_show_name_layer, content.show_name);
-    vertical_align_show_name();
+    render_show_info();
 
-    update_show_time(content.show_start, content.show_end);
 }
 
 static void main_window_load(Window *window) {
@@ -158,7 +160,7 @@ static void vertical_align_show_name(void) {
 }
 
 static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-    description_window_show(s_desc_content);
+    description_window_show(s_window_content.shows[s_current_show_index]);
 }
 
 static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -207,5 +209,15 @@ static void update_show_time(uint32_t start, uint32_t end) {
     }
 
     text_layer_set_text(s_show_time_layer, buffer);
+
+}
+
+static void render_show_info() {
+
+    text_layer_set_text(s_show_name_layer, s_window_content.shows[s_current_show_index].name);
+    vertical_align_show_name();
+
+    update_show_time(s_window_content.shows[s_current_show_index].start,
+                     s_window_content.shows[s_current_show_index].finish);
 
 }

@@ -35,7 +35,8 @@
       "SHOW_NAME[3]",
       "SHOW_START[3]",
       "SHOW_END[3]",
-      "SHOW_DESC[3]"
+      "SHOW_DESC[3]",
+      "NUM_SHOWS"
     ],
     "resources": {
       "media": [

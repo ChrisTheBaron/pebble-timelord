@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "description.h"
+#include "../types.h"
 
 static Window *s_window;
 
@@ -25,9 +26,9 @@ void description_window_deinit(void) {
     window_destroy(s_window);
 }
 
-void description_window_show(struct description_window_content content) {
+void description_window_show(show show) {
     window_stack_push(s_window, false);
-    description_window_update(content);
+    description_window_update(show);
 }
 
 void description_window_hide(void) {
@@ -38,11 +39,11 @@ bool description_window_is_visible(void) {
     return window_stack_get_top_window() == s_window;
 }
 
-void description_window_update(struct description_window_content content) {
+void description_window_update(show show) {
     Layer *window_layer = window_get_root_layer(s_window);
     GRect bounds = layer_get_frame(window_layer);
-    text_layer_set_text(s_name_layer, content.show_name);
-    text_layer_set_text(s_description_layer, content.show_description);
+    text_layer_set_text(s_name_layer, show.name);
+    text_layer_set_text(s_description_layer, show.description);
     GSize max_size_name = text_layer_get_content_size(s_name_layer);
     // This adds some spacing between the two layers
     max_size_name.h += 5;

@@ -1,7 +1,7 @@
 var Q = require('q');
 var ury = require('./services/ury');
 var keys = require('message_keys');
-var config = require("./config");
+const config = require("./config");
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready',
@@ -50,7 +50,9 @@ function assembleDictionary(studio, shows) {
     dictionary[keys["CURRENT_STUDIO"]] = studio;
     // Do a check for the actual length just in case the api
     // didn't return as many shows as we were expecting.
-    for (var i = 0; i < shows.length && i < config.NUM_SHOWS; i++) {
+    var num_shows = Math.min(shows.length, config.NUM_SHOWS);
+    dictionary[keys["NUM_SHOWS"]] = num_shows;
+    for (var i = 0; i < num_shows; i++) {
         dictionary[keys["SHOW_NAME"] + i] = shows[i].name;
         dictionary[keys["SHOW_START"] + i] = shows[i].start;
         dictionary[keys["SHOW_END"] + i] = shows[i].end;

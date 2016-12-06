@@ -1,8 +1,11 @@
 #include <pebble.h>
 #include "pebble-timelord.h"
-#include "windows/splash.h"
+
 #include "windows/main.h"
+#include "windows/splash.h"
 #include "windows/description.h"
+
+#include "types.h"
 
 GFont s_font_bold_30;
 GFont s_font_semi_bold_22;
@@ -72,45 +75,54 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 
+    Tuple *num_shows_tuple = dict_find(iterator, MESSAGE_KEY_NUM_SHOWS);
+
+    int num_shows = 0;
+    if (num_shows_tuple) {
+        num_shows = num_shows_tuple->value->int8;
+    }
+
     // Store incoming information
-    struct main_window_content content = (struct main_window_content) {
-            .studio_name = malloc(sizeof(char) * 10),
-            .show_name = malloc(sizeof(char) * 100),
-            .description_window_content = (struct description_window_content) {
-                    .show_name = malloc(sizeof(char) * 100),
-                    .show_description = malloc(sizeof(char) * 500)
-            }
+    w_main_content content = {
+            .studio_name = calloc(10, sizeof(char)),
+            .shows = calloc(num_shows, sizeof(show)),
+            .num_shows = num_shows
     };
 
-    // Read tuples for data
     Tuple *studio_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_STUDIO);
-    Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_NAME);
-    Tuple *start_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_START);
-    Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_END);
-    Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_DESC);
 
     // Check that we've received the data we need
     if (studio_tuple) {
         strcpy(content.studio_name, studio_tuple->value->cstring);
     }
 
-    if (name_tuple) {
-        strcpy(content.show_name, name_tuple->value->cstring);
-        strcpy(content.description_window_content.show_name,
-               name_tuple->value->cstring);
-    }
+    for (int i = 0; i < num_shows; i++) {
 
-    if (desc_tuple) {
-        strcpy(content.description_window_content.show_description,
-               desc_tuple->value->cstring);
-    }
+        content.shows[i].name = calloc(100, sizeof(char));
+        content.shows[i].description = calloc(500, sizeof(char));
 
-    if (start_tuple) {
-        content.show_start = (uint32_t) start_tuple->value->uint32;
-    }
+        // Read tuples for data
+        Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_NAME + i);
+        Tuple *start_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_START + i);
+        Tuple *end_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_END + i);
+        Tuple *desc_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_DESC + i);
 
-    if (end_tuple) {
-        content.show_end = (uint32_t) end_tuple->value->uint32;
+        if (name_tuple) {
+            strcpy(content.shows[i].name, name_tuple->value->cstring);
+        }
+
+        if (desc_tuple) {
+            strcpy(content.shows[i].description, desc_tuple->value->cstring);
+        }
+
+        if (start_tuple) {
+            content.shows[i].start = (unsigned int) start_tuple->value->uint32;
+        }
+
+        if (end_tuple) {
+            content.shows[i].finish = (unsigned int) end_tuple->value->uint32;
+        }
+
     }
 
     if (!main_window_is_visible()) {
@@ -130,8 +142,7 @@ static void inbox_dropped_callback(AppMessageResult reason, void *context) {
 }
 
 static void
-outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason,
-                       void *context) {
+outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
 }
 

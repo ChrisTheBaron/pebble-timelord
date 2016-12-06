@@ -80,6 +80,9 @@ function apiRequest(endpoint, options, cache) {
     return deferred.promise;
 }
 
+/**
+ * @returns Promise
+ */
 function xhrRequest(url, type) {
     var deferred = Q.defer();
     var xhr = new XMLHttpRequest();
@@ -126,7 +129,7 @@ function parseShows(payload) {
     var shows = [];
     shows.push(parseShow(payload["current"]));
     if (payload["next"]) {
-        for (var i = 0; i < config.NUM_SHOWS && i < payload["next"].length; i++) {
+        for (var i = 0; i < config.NUM_SHOWS - 1 && i < payload["next"].length; i++) {
             shows.push(parseShow(payload["next"][i]));
         }
     } else {
