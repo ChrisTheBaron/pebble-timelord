@@ -1,5 +1,9 @@
 #include <pebble.h>
 #include <math.h>
+
+#include "../types.h"
+#include "../constants.h"
+
 #include "main.h"
 #include "description.h"
 
@@ -16,7 +20,8 @@ static TextLayer *s_studio_layer;
 static TextLayer *s_show_time_layer;
 static TextLayer *s_show_name_layer;
 
-static struct description_window_content s_desc_content;
+static w_main_content s_window_content;
+static int s_current_show_index;
 
 void main_window_init(void) {
     // Create main Window element and assign to pointer
@@ -34,7 +39,7 @@ void main_window_deinit(void) {
     window_destroy(s_window);
 }
 
-void main_window_show(struct main_window_content content) {
+void main_window_show(w_main_content content) {
     window_stack_push(s_window, false);
     main_window_update(content);
 }
@@ -47,29 +52,15 @@ bool main_window_is_visible(void) {
     return window_stack_get_top_window() == s_window;
 }
 
-void main_window_update(struct main_window_content content) {
-    // Store the description content for later use
-    s_desc_content = content.description_window_content;
+void main_window_update(w_main_content content) {
+    // Store the content for later use
+    s_window_content = content;
+    s_current_show_index = 0;
 
     text_layer_set_text(s_studio_layer, content.studio_name);
 
-    text_layer_set_text(s_show_name_layer, content.show_name);
-    vertical_align_show_name();
+    render_show_info();
 
-    static char end_buffer[15];
-
-    // If end_value is 0 then we don't have an end time. I.E. Jukebox "The End of Time"
-    if (content.show_end) {
-        time_t end_time = (time_t) content.show_end;
-        time_t temp = time(&end_time);
-        struct tm *tick_time = localtime(&temp);
-        text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
-        strftime(end_buffer, sizeof(end_buffer), "Now - %I:%M", tick_time);
-    } else {
-        text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
-        snprintf(end_buffer, sizeof(end_buffer), "Now - Forever");
-    }
-    text_layer_set_text(s_show_time_layer, end_buffer);
 }
 
 static void main_window_load(Window *window) {
@@ -90,7 +81,12 @@ static void main_window_unload(Window *window) {
 
 static void create_studio_layer(Layer *window_layer, GRect bounds) {
     // Create the TextLayer with specific bounds
-    s_studio_layer = text_layer_create(GRect(0, 0, bounds.size.w, studio_name_height));
+    s_studio_layer = text_layer_create(
+            grect_inset(
+                    GRect(0, 0, bounds.size.w, studio_name_height),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 
     // Style the text
     text_layer_set_background_color(s_studio_layer, GColorClear);
@@ -103,14 +99,17 @@ static void create_studio_layer(Layer *window_layer, GRect bounds) {
 }
 
 static void create_show_name_layer(Layer *window_layer, GRect bounds) {
-    // Create temperature Layer
     s_show_name_layer = text_layer_create(
-            GRect(
-                    0,
-                    studio_name_height,
-                    bounds.size.w,
-                    bounds.size.h - studio_name_height - show_time_height
-            ));
+            grect_inset(
+                    GRect(
+                            0,
+                            studio_name_height,
+                            bounds.size.w,
+                            bounds.size.h - studio_name_height - show_time_height
+                    ),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 
     // Style the text
     text_layer_set_background_color(s_show_name_layer, GColorClear);
@@ -124,14 +123,18 @@ static void create_show_name_layer(Layer *window_layer, GRect bounds) {
 }
 
 static void create_show_time_layer(Layer *window_layer, GRect bounds) {
-    // Create temperature Layer
     s_show_time_layer = text_layer_create(
-            GRect(
-                    0,
-                    bounds.size.h - show_time_height,
-                    bounds.size.w,
-                    show_time_height
-            ));
+            grect_inset(
+                    GRect(
+                            0,
+                            bounds.size.h - show_time_height,
+                            bounds.size.w,
+                            show_time_height
+                    ),
+                    GEdgeInsets(0, PADDING, PADDING, PADDING)
+            )
+
+    );
 
     // Style the text
     text_layer_set_background_color(s_show_time_layer, GColorClear);
@@ -162,26 +165,87 @@ static void vertical_align_show_name(void) {
     int layer_position = (bounds.size.h / 2 - wanted_height / 2);
     // We can afford to make the layer as big as we can to stop characters being cut off
     int layer_height = bounds.size.h - layer_position - show_time_height;
-    layer_set_frame(text_layer_get_layer(s_show_name_layer), GRect(
-            0,
-            layer_position,
-            bounds.size.w,
-            layer_height
-    ));
+    layer_set_frame(
+            text_layer_get_layer(s_show_name_layer),
+            grect_inset(
+                    GRect(
+                            0,
+                            layer_position,
+                            bounds.size.w,
+                            layer_height
+                    ),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 }
 
 static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-    description_window_show(s_desc_content);
+    description_window_show(s_window_content.shows[s_current_show_index]);
 }
 
 static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (s_current_show_index > 0) {
+        s_current_show_index--;
+    }
+    render_show_info();
 }
 
 static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (s_current_show_index < (s_window_content.num_shows - 1)) {
+        s_current_show_index++;
+    }
+    render_show_info();
 }
 
 static void main_window_click_config_provider(void *context) {
     window_single_click_subscribe(BUTTON_ID_SELECT, main_window_select_click_handler);
     window_single_click_subscribe(BUTTON_ID_UP, main_window_up_click_handler);
     window_single_click_subscribe(BUTTON_ID_DOWN, main_window_down_click_handler);
+}
+
+static void update_show_time(uint32_t start, uint32_t end) {
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "Start: %d, End: %d", (int) start, (int) end);
+
+    static char buffer[15];
+
+    text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
+
+    // If start is 0 then we don't have a start time.
+    // This is probably the current show. We'll just
+    // assume we can say the show started 'Now'.
+    if (start) {
+        time_t start_time = (time_t) start;
+        struct tm *tick_time = localtime(&start_time);
+        strftime(buffer, sizeof(buffer), "%H:%M - ", tick_time);
+    } else {
+        snprintf(buffer, sizeof(buffer), "Now - ");
+    }
+
+    // If end is 0 then we don't have an end time.
+    // I.E. Jukebox "The End of Time" at term ends.
+    if (end) {
+        char end_buff[6];
+        time_t end_time = (time_t) end;
+        struct tm *tick_time = localtime(&end_time);
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_22);
+        strftime(end_buff, sizeof(end_buff), "%H:%M", tick_time);
+        strcat(buffer, end_buff);
+    } else {
+        text_layer_set_font(s_show_time_layer, s_font_semi_bold_20);
+        strcat(buffer, "Forever");
+    }
+
+    text_layer_set_text(s_show_time_layer, buffer);
+
+}
+
+static void render_show_info() {
+
+    text_layer_set_text(s_show_name_layer, s_window_content.shows[s_current_show_index].name);
+    vertical_align_show_name();
+
+    update_show_time(s_window_content.shows[s_current_show_index].start,
+                     s_window_content.shows[s_current_show_index].finish);
+
 }

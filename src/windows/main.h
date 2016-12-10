@@ -1,26 +1,25 @@
 #ifndef PEBBLE_TIMELORD_MAIN_H
 #define PEBBLE_TIMELORD_MAIN_H
 
-#include "description.h"
+#include "../types.h"
 
-struct main_window_content {
+typedef struct {
     char *studio_name;
-    char *show_name;
-    uint32_t show_end;
-    struct description_window_content description_window_content;
-};
+    show *shows;
+    int num_shows;
+} w_main_content;
 
 void main_window_init(void);
 
 void main_window_deinit(void);
 
-void main_window_show(struct main_window_content content);
+void main_window_show(w_main_content content);
 
 void main_window_hide(void);
 
 bool main_window_is_visible(void);
 
-void main_window_update(struct main_window_content content);
+void main_window_update(w_main_content content);
 
 static void main_window_load(Window *window);
 
@@ -41,5 +40,9 @@ static void main_window_up_click_handler(ClickRecognizerRef recognizer, void *co
 static void main_window_down_click_handler(ClickRecognizerRef recognizer, void *context);
 
 static void main_window_click_config_provider(void *context);
+
+static void update_show_time(uint32_t start, uint32_t end);
+
+static void render_show_info();
 
 #endif //PEBBLE_TIMELORD_MAIN_H
