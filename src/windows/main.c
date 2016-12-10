@@ -2,6 +2,8 @@
 #include <math.h>
 
 #include "../types.h"
+#include "../constants.h"
+
 #include "main.h"
 #include "description.h"
 
@@ -79,7 +81,12 @@ static void main_window_unload(Window *window) {
 
 static void create_studio_layer(Layer *window_layer, GRect bounds) {
     // Create the TextLayer with specific bounds
-    s_studio_layer = text_layer_create(GRect(0, 0, bounds.size.w, studio_name_height));
+    s_studio_layer = text_layer_create(
+            grect_inset(
+                    GRect(0, 0, bounds.size.w, studio_name_height),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 
     // Style the text
     text_layer_set_background_color(s_studio_layer, GColorClear);
@@ -92,14 +99,17 @@ static void create_studio_layer(Layer *window_layer, GRect bounds) {
 }
 
 static void create_show_name_layer(Layer *window_layer, GRect bounds) {
-    // Create temperature Layer
     s_show_name_layer = text_layer_create(
-            GRect(
-                    0,
-                    studio_name_height,
-                    bounds.size.w,
-                    bounds.size.h - studio_name_height - show_time_height
-            ));
+            grect_inset(
+                    GRect(
+                            0,
+                            studio_name_height,
+                            bounds.size.w,
+                            bounds.size.h - studio_name_height - show_time_height
+                    ),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 
     // Style the text
     text_layer_set_background_color(s_show_name_layer, GColorClear);
@@ -113,14 +123,18 @@ static void create_show_name_layer(Layer *window_layer, GRect bounds) {
 }
 
 static void create_show_time_layer(Layer *window_layer, GRect bounds) {
-    // Create temperature Layer
     s_show_time_layer = text_layer_create(
-            GRect(
-                    0,
-                    bounds.size.h - show_time_height,
-                    bounds.size.w,
-                    show_time_height
-            ));
+            grect_inset(
+                    GRect(
+                            0,
+                            bounds.size.h - show_time_height,
+                            bounds.size.w,
+                            show_time_height
+                    ),
+                    GEdgeInsets(0, PADDING, PADDING, PADDING)
+            )
+
+    );
 
     // Style the text
     text_layer_set_background_color(s_show_time_layer, GColorClear);
@@ -151,12 +165,18 @@ static void vertical_align_show_name(void) {
     int layer_position = (bounds.size.h / 2 - wanted_height / 2);
     // We can afford to make the layer as big as we can to stop characters being cut off
     int layer_height = bounds.size.h - layer_position - show_time_height;
-    layer_set_frame(text_layer_get_layer(s_show_name_layer), GRect(
-            0,
-            layer_position,
-            bounds.size.w,
-            layer_height
-    ));
+    layer_set_frame(
+            text_layer_get_layer(s_show_name_layer),
+            grect_inset(
+                    GRect(
+                            0,
+                            layer_position,
+                            bounds.size.w,
+                            layer_height
+                    ),
+                    GEdgeInsets(0, PADDING)
+            )
+    );
 }
 
 static void main_window_select_click_handler(ClickRecognizerRef recognizer, void *context) {

@@ -99,7 +99,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     for (int i = 0; i < num_shows; i++) {
 
         content.shows[i].name = calloc(100, sizeof(char));
-        content.shows[i].description = calloc(500, sizeof(char));
+        content.shows[i].description = calloc(1000, sizeof(char));
 
         // Read tuples for data
         Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_NAME + i);
